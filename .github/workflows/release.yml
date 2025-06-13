@@ -1,14 +1,20 @@
 name: Release
 
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+      - "v*"
 
 jobs:
   build-and-release:
     runs-on: macos-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -25,12 +31,44 @@ jobs:
         run: |
           pyinstaller iterm-splitter.spec
 
+      - name: Calculate SHA256
+        run: |
+          cd dist
+          SHA256=$(shasum -a 256 iterm-splitter | cut -d ' ' -f 1)
+          echo "BINARY_SHA256=$SHA256" >> $GITHUB_ENV
+          cd ..
+
+      - name: Update Formula SHA256
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          sed -i '' "s/sha256 \".*\"/sha256 \"$BINARY_SHA256\"/" Formula/iterm-splitter.rb
+          sed -i '' "s/version \".*\"/version \"$VERSION\"/" Formula/iterm-splitter.rb
+
+      - name: Commit Formula Changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add Formula/iterm-splitter.rb
+          git commit -m "chore: update formula sha256 for version ${GITHUB_REF#refs/tags/v}"
+          git push
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ github.event.release.upload_url }}
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./dist/iterm-splitter
           asset_name: iterm-splitter
           asset_content_type: application/octet-stream

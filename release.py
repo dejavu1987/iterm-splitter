@@ -63,10 +63,11 @@ def main():
     run_command('git push origin main --tags')
 
     print(f"\nRelease {version} process completed!")
-    print("The GitHub Action will now build and upload the release.")
-    print("\nNext steps:")
-    print("1. Monitor the GitHub Actions workflow")
-    print("2. Once completed, verify the release on GitHub")
+    print("The GitHub Action will now:")
+    print("1. Build the binary")
+    print("2. Calculate and update the SHA256 in the formula")
+    print("3. Create the release with the binary")
+    print("\nMonitor the progress at: https://github.com/dejavu1987/iterm-splitter/actions")
 
 if __name__ == "__main__":
     main()
