@@ -3,7 +3,7 @@ class ItermSplitter < Formula
   homepage "https://github.com/dejavu1987/iterm-splitter"
   url "https://github.com/dejavu1987/iterm-splitter/releases/latest/download/iterm-splitter"
   sha256 "63b959852a073c7a67d14d84d26d1e72c6532667d6523b40787a14d1af54418f"
-  version "1.0.1"
+  version "1.1.0"
 
   depends_on :macos
   depends_on "iterm2"
